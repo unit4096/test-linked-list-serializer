@@ -29,6 +29,7 @@
 #include <vector>
 #include <map>
 #include <sstream>
+#include <exception>
 
 
 // prev is head, next is tail
@@ -119,54 +120,52 @@ public:
         }
         
         std::ofstream file;
-        file.open(source);
-        if (!file)
+        file.exceptions ( std::ofstream::badbit );        
+
+        try
         {
-            std::cout << "ERROR: Cannot open a file to read" << "\n";
-            return;
-        }
-        
+            file.open(source);
 
-        if (file.eof())
-        {
-            std::cout << "ERROR: Unexpected end of the file reached!\n";
-            return;
-        }
+            // This is a reverse lookup map
+            std::map<ListNode*, int> links;
 
-        // This is a reverse lookup map
-        std::map<ListNode*, int> links;
-
-        int counter = 0;
-        ListNode* NodeTmp = this->Tail;
-        while (NodeTmp != nullptr && NodeTmp->Data != "" )
-        {
-            // Add indices for all. It will allow O(1) lookup for rand nodes
-            // (depends on the implementation, as everything in C++)
-            links[NodeTmp] = counter;
-            
-            file << NodeTmp->Data << "\n";
-            NodeTmp = NodeTmp->Next;
-            ++counter;
-        }
-
-
-        // if there are random links
-        if (links.size() > 0)
-        {
-            // We need an empty line
-            file << "\n";
-
-            // Adds random links in a format:
-            // link_from
-            // link_to
-            for (auto const& pair: links)
+            int counter = 0;
+            ListNode* NodeTmp = this->Tail;
+            while (NodeTmp != nullptr && NodeTmp->Data != "" )
             {
-                if (pair.first->Rand != nullptr)
-                {
-                    file << pair.second << "\n" << links[pair.first->Rand] << "\n" ;
-                }
+                // Add indices for all. It will allow O(1) lookup for rand nodes
+                // (depends on the implementation, as everything in C++)
+                links[NodeTmp] = counter;
                 
-            }       
+                file << NodeTmp->Data << "\n";
+                NodeTmp = NodeTmp->Next;
+                ++counter;
+            }
+
+
+            // if there are random links
+            if (links.size() > 0)
+            {
+                // We need an empty line
+                file << "\n";
+
+                // Adds random links in a format:
+                // link_from
+                // link_to
+                for (auto const& pair: links)
+                {
+                    if (pair.first->Rand != nullptr)
+                    {
+                        file << pair.second << "\n" << links[pair.first->Rand] << "\n" ;
+                    }
+                    
+                }       
+            }
+           
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
         }
         file.close();
     };
@@ -182,53 +181,54 @@ public:
         
 
         std::ifstream file;
-        file.open(source);
-        if (!file.is_open())
+        file.exceptions ( std::ifstream::badbit );
+
+        try
+        {        
+            file.open(source);
+
+            // A vector with indices
+            std::vector<ListNode*> links;
+            int counter = 0;
+            while (file)
+            {
+                std::string line;
+                std::getline(file,line);
+                if (line != "")
+                {
+                    this->PushBack(line);
+                    links.push_back(this->Head);
+                    ++counter;
+                }
+                else
+                {
+                    break;
+                }
+                this->Count = counter;
+            }
+            while (file)
+            {
+
+                std::string line,line2;
+                std::getline(file,line);
+                std::getline(file,line2);
+                if (line != "" && line2 != "")
+                {
+
+                    ListNode *source = links[ std::stoi(line) ];
+                    ListNode *destination = links[ std::stoi(line2) ];
+                    source->Rand = destination;
+                }            
+
+            }
+
+    
+        }
+        catch(const std::exception& e)
         {
-            std::cout << "ERROR: Cannot open a file to read" << "\n";
-            return;
+            std::cerr << e.what() << '\n';
         }
         
-        if (!file.good())
-        {
-            std::cout << "ERROR: Unexpected end of the file reached!\n";
-            return;
-        }
-
-        // A vector with indices
-        std::vector<ListNode*> links;
-        int counter = 0;
-        while (file)
-        {
-            std::string line;
-            std::getline(file,line);
-            if (line != "")
-            {
-                this->PushBack(line);
-                links.push_back(this->Head);
-                ++counter;
-            }
-            else
-            {
-                break;
-            }
-            this->Count = counter;
-        }
-        while (file)
-        {
-
-            std::string line,line2;
-            std::getline(file,line);
-            std::getline(file,line2);
-            if (line != "" && line2 != "")
-            {
-
-                ListNode *source = links[ std::stoi(line) ];
-                ListNode *destination = links[ std::stoi(line2) ];
-                source->Rand = destination;
-            }            
-
-        }
         file.close();
         
     };
