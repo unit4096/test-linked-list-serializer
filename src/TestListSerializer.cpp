@@ -8,7 +8,7 @@
     M is the number of nodes in the list and N is the number of random node
     pointers. Thus, both serialization and deserialization have linear complexity.
 
-    It also has an O(M) space complexity (worst case), where N is the number of 
+    It also has an O(M) space complexity (worst case), where M is the number of 
     random connections. It is possible to improve space complexity by using more
     complex file structures such as JSON format, but external libs are prohibited
     and I don't want to implement my own JSON parser in a test assignment. 
