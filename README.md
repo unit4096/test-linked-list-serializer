@@ -7,7 +7,7 @@ Contains code to create, serialize, and deserialize doubly linked lists with add
 
 ## How to use 
 
-Comple the `TestListSerializer.cpp` file and run it. This will launch the demo code and print out results in your terminal. Otherwise, you can just copy the code. No dynamic libraries, sorry!
+Compile the `TestListSerializer.cpp` file and run it. This will launch the demo code and print out results in your terminal. Otherwise, you can just copy the code. No dynamic libraries, sorry!
 *Note* that it will create a *.txt file* called `list_serialization_test.txt` inside the project folder.
 
 ## How to build
@@ -22,8 +22,8 @@ Can be compiled with GCC, tested with G++ 11.3.0
 g++ TestListSerializer.cpp -o test
 ```
 
-## Data structure 
-/relevant for v 1.1/
+## The data structure 
+*relevant for v 1.1*
 
 The text structure of a serialized file consists of three parts: a header, a payload, and an index list. As you can see, the structure is vaguely inspired by HTTP packages and OpenGL buffers.
 
@@ -54,6 +54,6 @@ Note that a) the first element is Tail b) Indices are 0-based.
 
 ## Caveats and known issues
 
-- When serializing into a file, overrides its content!
+- When serializing into a file, overwrites its content!
 - Behaves badly with special characters (\n, \0) in data
-- Tested only with ascii, may not support extended UTF
+- Tested only with ASCII, may not support extended UTF
