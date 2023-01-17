@@ -30,7 +30,8 @@
 #include <map>
 #include <sstream>
 #include <exception>
-
+#include <cstdlib>
+	
 
 // prev is head, next is tail
 // head > node > node > node > node > tail
@@ -113,7 +114,9 @@ public:
 
     void Serialize(std::string source)
     {
-        if (this->Count == 0)
+        int listSize = this->Count;
+
+        if (listSize == 0)
         {
             std::cout << "List is empty, nothing to serialize" << "\n";
             return;
@@ -125,29 +128,36 @@ public:
         try
         {
             file.open(source);
+            
+            // Create a "header" with the size of a list
+            file << listSize << "\n";
 
             // This is a reverse lookup map
             std::map<ListNode*, int> links;
 
-            int counter = 0;
             ListNode* NodeTmp = this->Tail;
-            while (NodeTmp != nullptr && NodeTmp->Data != "" )
+
+            // Iterate the list nodes 
+            for (int i = 0; i < listSize; i++)
             {
-                // Add indices for all. It will allow O(1) lookup for rand nodes
-                // (depends on the implementation, as everything in C++)
-                links[NodeTmp] = counter;
+                if (NodeTmp != nullptr)
+                {
+                    // Add indices for all nodes in a map. It will allow O(1)
+                    // lookup for rand nodes 
+                    // (depends on the implementation, as everything in C++)
+                    links[NodeTmp] = i;
+                    // store data for each node and move the pointer to the next
+                    file << NodeTmp->Data << "\n";
+                    NodeTmp = NodeTmp->Next;    
+                }
                 
-                file << NodeTmp->Data << "\n";
-                NodeTmp = NodeTmp->Next;
-                ++counter;
             }
 
-
+            // An empty line divider just in case
+            file << "\n";
             // if there are random links
             if (links.size() > 0)
             {
-                // We need an empty line
-                file << "\n";
 
                 // Adds random links in a format:
                 // link_from
@@ -172,7 +182,7 @@ public:
 
     void Deserialize(std::string source)
     {
-
+        
         // Check if the list has any nodes. Clear them if so
         if (this->Count > 0)
         {
@@ -186,39 +196,59 @@ public:
         try
         {        
             file.open(source);
+            int listSize = 0;
+            
+            // Read the header line
+            std::string headerLine;
+            std::getline(file,headerLine);
+            listSize = std::stoi(headerLine);
+            
 
             // A vector with indices
             std::vector<ListNode*> links;
-            int counter = 0;
-            while (file)
+            for (size_t i = 0; i < listSize; i++)
             {
                 std::string line;
                 std::getline(file,line);
-                if (line != "")
-                {
-                    this->PushBack(line);
-                    links.push_back(this->Head);
-                    ++counter;
-                }
-                else
-                {
-                    break;
-                }
-                this->Count = counter;
+                this->PushBack(line);
+                links.push_back(this->Head);
             }
+            // this->Count = listSize;
+
+            if (this->Count != listSize) 
+            {
+                std::cout << "The list size somehow is incorrect!" << std::endl;
+                return;
+            }
+            
+
+            std::string dividerLine;
+            std::getline(file,dividerLine);
+            // The divider line shoudl be empty, can be done through Assert()
+            if (dividerLine != "")
+            {
+                // A messy way of doing "exceptions" 
+                std::cout << "The divider space is not empty! Something is wrong with the file! Serialiation aboted \n";
+                return;
+            }
+
             while (file)
             {
-
+                // Get two lines for source and destination indices
                 std::string line,line2;
                 std::getline(file,line);
                 std::getline(file,line2);
                 if (line != "" && line2 != "")
                 {
-
                     ListNode *source = links[ std::stoi(line) ];
                     ListNode *destination = links[ std::stoi(line2) ];
                     source->Rand = destination;
-                }            
+                }
+                else
+                {
+                    break;
+                }
+                
 
             }
 
@@ -326,14 +356,15 @@ void testPrintList(const ListRand &List)
 void runTestNodeRandom()
 {
     std::string txtPath1 = "list_serialization_test.txt";
-    ListRand* List = new ListRand("0");
-    std::cout << "Create a list with one node and value  \n" << std::endl;
+    ListRand* List = new ListRand("");
+    std::cout << "Create a list with one node and an empty string  \n" << std::endl;
     testPrintList(*List);
 
     
     std::cout << "Serializing..." << std::endl;
     List->Serialize(txtPath1); 
     std::cout << "Serialized!" << std::endl;
+    
 
     std::cout << "Deserializing..." << std::endl;
     List->Deserialize(txtPath1);
@@ -355,7 +386,7 @@ void runTestNodeRandom()
     List->Head->SetRandomNode(List->Head);
     testPrintList(*List);
 
-    std::cout << "PushFront five elements and make Tail to reference Head \n" << std::endl;
+    std::cout << "PushBack five elements and make Tail to reference Head \n" << std::endl;
 
 
     List->PushBack("1");
@@ -377,12 +408,19 @@ void runTestNodeRandom()
     testPrintList(*List);
     
     
-    std::cout << "Clear the list and push a string with some garbage \n" << std::endl;
+    std::cout << "Clear the list and PushBack 10 strings with some garbage \n" << std::endl;
     List->Clear();
 
-    std::string randomStr = "adfa dfe323f f4f _5et 56 ; lgk;'lrkpog+===mp ig4pzm[p'][03.,[anun";
+
+
+    
     for (size_t i = 0; i < 10; i++)
-    {   
+    {
+        std::string randomStr = "";   
+        for (size_t j = 0; j < 15; j++)
+        {
+            randomStr.push_back((std::rand() + j) % 96 + 31);
+        }
         List->PushBack(randomStr);
     }
     List->Head->SetRandomNode(List->Head);
